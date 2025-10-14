@@ -73,6 +73,9 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 			cookie, err := r.Cookie("token")
 			if err == nil {
 				tokenString = cookie.Value
+			} else {
+				http.Error(w, "Authentification required", http.StatusUnauthorized)
+				return
 			}
 			// здесь код для валидации и проверки JWT-токена
 			/*			var claims Claims
