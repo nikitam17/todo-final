@@ -30,17 +30,17 @@ func taskSignInHandler(w http.ResponseWriter, r *http.Request) {
 	// читаем тело запроса
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
 		return
 	}
 	// десериализуем JSON
 	if err = json.Unmarshal(buf.Bytes(), &pwd); err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
 		return
 	}
 	pass := os.Getenv("TODO_PASSWORD")
 	if pass != pwd.Pwd {
-		writeJson(w, map[string]string{"error": "Неверный пароль"})
+		writeJson(w, map[string]string{"error": "Неверный пароль"}, http.StatusUnauthorized)
 		return
 	}
 	//claims := Claims{}
@@ -57,10 +57,10 @@ func taskSignInHandler(w http.ResponseWriter, r *http.Request) {
 	// получаем подписанный токен
 	signedToken, err := jwtToken.SignedString([]byte(MySecret))
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
 		return
 	}
-	writeJson(w, map[string]string{"token": signedToken})
+	writeJson(w, map[string]string{"token": signedToken}, http.StatusOK)
 }
 
 func auth(next http.HandlerFunc) http.HandlerFunc {
@@ -99,7 +99,7 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 				return []byte(MySecret), nil
 			})
 			if err != nil {
-				writeJson(w, map[string]string{"error": err.Error()})
+				writeJson(w, map[string]string{"error": err.Error()}, http.StatusUnauthorized)
 				return
 			}
 			if !jwtToken.Valid {
@@ -109,18 +109,18 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 			// приводим поле Claims к типу jwt.MapClaims
 			res, ok := jwtToken.Claims.(jwt.MapClaims)
 			if !ok {
-				writeJson(w, map[string]string{"error": "failed to type assertion of jwt.MapCalims"})
+				writeJson(w, map[string]string{"error": "failed to type assertion of jwt.MapCalims"}, http.StatusInternalServerError)
 				return
 			}
 			checksumStr, ok := res["checksum"].(string)
 			if !ok {
-				writeJson(w, map[string]string{"error": "Invalid checksum format"})
+				writeJson(w, map[string]string{"error": "Invalid checksum format"}, http.StatusInternalServerError)
 				return
 			}
 			// Преобразуем hex-строку обратно в байтовый массив
 			checksumFromToken, err := hex.DecodeString(checksumStr)
 			if err != nil {
-				writeJson(w, map[string]string{"error": "Failed to decode checksum"})
+				writeJson(w, map[string]string{"error": "Failed to decode checksum"}, http.StatusInternalServerError)
 				return
 			}
 			// Получаем ожидаемый checksum

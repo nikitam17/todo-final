@@ -37,14 +37,14 @@ func checkDate(task *db.Task) error {
 }
 
 // Функция вывода в формате JSON
-func writeJson(w http.ResponseWriter, data any) {
+func writeJson(w http.ResponseWriter, data any, status int) {
 	resp, err := json.Marshal(data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 	w.Write(resp)
 }
 
@@ -56,30 +56,30 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	// читаем тело запроса
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
 		return
 	}
 	// десериализуем JSON
 	if err = json.Unmarshal(buf.Bytes(), &task); err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
 		return
 	}
 	if task.Title == "" {
-		writeJson(w, map[string]string{"error": "не указан заголовок задачи"})
+		writeJson(w, map[string]string{"error": "не указан заголовок задачи"}, http.StatusInternalServerError)
 		return
 	}
 	// проверяем поля task
 	err = checkDate(&task)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
 		return
 	}
 	// добавляем задачу в БД
 	id, err = db.AddTask(&task)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
 		return
 	}
 	task.ID = strconv.Itoa(int(id))
-	writeJson(w, map[string]string{"id": task.ID})
+	writeJson(w, map[string]string{"id": task.ID}, http.StatusOK)
 }
