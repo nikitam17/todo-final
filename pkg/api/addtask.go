@@ -65,13 +65,13 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if task.Title == "" {
-		writeJson(w, map[string]string{"error": "не указан заголовок задачи"}, http.StatusInternalServerError)
+		writeJson(w, map[string]string{"error": "не указан заголовок задачи"}, http.StatusBadRequest)
 		return
 	}
 	// проверяем поля task
 	err = checkDate(&task)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 	// добавляем задачу в БД

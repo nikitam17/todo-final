@@ -246,17 +246,17 @@ func taskEditHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if task.ID == "" {
-		writeJson(w, map[string]string{"error": "не указан идентификатор"}, http.StatusInternalServerError)
+		writeJson(w, map[string]string{"error": "не указан идентификатор"}, http.StatusBadRequest)
 		return
 	}
 	if task.Title == "" {
-		writeJson(w, map[string]string{"error": "не указан заголовок задачи"}, http.StatusInternalServerError)
+		writeJson(w, map[string]string{"error": "не указан заголовок задачи"}, http.StatusBadRequest)
 		return
 	}
 	// проверяем поля task
 	err = checkDate(&task)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
+		writeJson(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 	// обновляем задачу в БД
@@ -272,7 +272,7 @@ func taskEditHandler(w http.ResponseWriter, r *http.Request) {
 func taskDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	if id == "" {
-		writeJson(w, map[string]string{"error": "не указан идентификатор"}, http.StatusInternalServerError)
+		writeJson(w, map[string]string{"error": "не указан идентификатор"}, http.StatusBadRequest)
 		return
 	}
 	err := db.DeleteTask(id)
